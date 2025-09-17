@@ -43,13 +43,13 @@ class StickyBuyBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                if (oldPrice != null)
-                  BottomStrikeRow(
-                    oldPrice: oldPrice,
-                    discountLabel: product.discountLabel.isEmpty
-                        ? null
-                        : product.discountLabel,
-                  ),
+                // if (oldPrice != null)
+                //   BottomStrikeRow(
+                //     oldPrice: oldPrice,
+                //     discountLabel: product.discountLabel.isEmpty
+                //         ? null
+                //         : product.discountLabel,
+                //   ),
               ],
             ),
           ),

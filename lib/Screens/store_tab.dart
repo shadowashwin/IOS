@@ -19,18 +19,20 @@ class _StoreTabState extends State<StoreTab> {
       title: 'Diploma Theory Papers — June 2024 & December 2024',
       price: 0,
       originalPrice: 0,
-      discountLabel: '',
+      // discountLabel: '',
       badgeLeft: 'FILES',
       badgeRight: '',
+      id: '',
     ),
     Product(
       title:
           'Master Notes: DNB Obstetrics & Gynecology Topic-wise & Year-wise...',
       price: 0,
       originalPrice: 0,
-      discountLabel: '28% OFF',
+      // discountLabel: '28% OFF',
       badgeLeft: 'FREE CONTENT',
       badgeRight: 'FILES',
+      id: '',
     ),
   ];
 
