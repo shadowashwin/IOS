@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obgynprep/Components/razorpay_button.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../Modal/Product.dart';
@@ -55,22 +56,14 @@ class StickyBuyBar extends StatelessWidget {
           ),
           SizedBox(
             height: 44,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: currentPrice == "0" ? 0 : 10,
-                backgroundColor: currentPrice == "0"
-                    ? Colors.transparent
-                    : AppColors.buyBlue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () {},
-              child: Text(
-                currentPrice == "0" ? "" : 'Buy now',
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
+            child: RazorpayPayButton(
+              product: product,
+              currentPrice: product.price.toStringAsFixed(
+                0,
+              ), // or your `currentPrice` var
+              razorpayKey: 'rzp_test_R5ttHav8WQXEEk', // <-- your Razorpay key
+              companyName: 'Miraki Media',
+              userEmailFallback: 'hello@mirakimedia.com',
             ),
           ),
         ],

@@ -21,6 +21,7 @@ class Loginscreen extends StatefulWidget {
 
 class _LoginscreenState extends State<Loginscreen> {
   _Stage _stage = _Stage.org;
+  bool signup_login = true;
   final _orgController = TextEditingController();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -189,7 +190,14 @@ class _LoginscreenState extends State<Loginscreen> {
     // final email = _emailController.text.trim();
     final mobile = _mobileController.text.trim();
     // || email.isEmpty
-    if (name.isEmpty || mobile.isEmpty) {
+    if (!signup_login && mobile.isEmpty) {
+      _showBottomMessage(
+        icon: Icons.error_outline,
+        color: Colors.red,
+        text: 'Please enter phone number',
+      );
+      return;
+    } else if (signup_login && (name.isEmpty || mobile.isEmpty)) {
       _showBottomMessage(
         icon: Icons.error_outline,
         color: Colors.red,
@@ -200,15 +208,24 @@ class _LoginscreenState extends State<Loginscreen> {
 
     // await _createTempUser();
     try {
-      print("registering");
-      final uri = Uri.parse('$apiBaseUrl/api/users/register-send-otp');
-      final resp = await http
-          .post(
-            uri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'name': name, 'phone': mobile}),
-          )
-          .timeout(const Duration(seconds: 8));
+      final uri = signup_login
+          ? Uri.parse('$apiBaseUrl/api/users/register-send-otp')
+          : Uri.parse('$apiBaseUrl/api/users/login-send-otp');
+      final resp = signup_login
+          ? await http
+                .post(
+                  uri,
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({'name': name, 'phone': mobile}),
+                )
+                .timeout(const Duration(seconds: 8))
+          : await http
+                .post(
+                  uri,
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({'phone': mobile}),
+                )
+                .timeout(const Duration(seconds: 8));
       print(resp.body);
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body) as Map<String, dynamic>;
@@ -329,7 +346,9 @@ class _LoginscreenState extends State<Loginscreen> {
       case _Stage.register:
         content = Column(
           children: [
-            buildTextField(_nameController, 'Full Name', Icons.person),
+            signup_login
+                ? buildTextField(_nameController, 'Full Name', Icons.person)
+                : Container(),
             const SizedBox(height: 16),
             // buildTextField(_emailController, 'Email Address', Icons.email),
             // const SizedBox(height: 16),
@@ -444,16 +463,88 @@ class _LoginscreenState extends State<Loginscreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          _stage == _Stage.org ? "Welcome !" : "Login",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        _stage == _Stage.org
+                            ? Text(
+                                "Welcome !",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : SizedBox(
+                                height: mq.height * 0.05,
+                                width: mq.width * 0.7,
+                                child: Row(
+                                  children: [
+                                    InkWell(
+                                      child: Container(
+                                        height: mq.height * 0.05,
+                                        width: mq.width * 0.35,
+                                        decoration: BoxDecoration(
+                                          color: signup_login
+                                              ? Colors.blue
+                                              : Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "Signup",
+                                            style: TextStyle(
+                                              color: signup_login
+                                                  ? Colors.white
+                                                  : Colors.blue,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        setState(() {
+                                          signup_login = !signup_login;
+                                        });
+                                      },
+                                    ),
+                                    InkWell(
+                                      child: Container(
+                                        height: mq.height * 0.05,
+                                        width: mq.width * 0.35,
+                                        decoration: BoxDecoration(
+                                          color: signup_login
+                                              ? Colors.white
+                                              : Colors.blue,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "Login",
+                                            style: TextStyle(
+                                              color: signup_login
+                                                  ? Colors.blue
+                                                  : Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        setState(() {
+                                          signup_login = !signup_login;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+
                         SizedBox.fromSize(
-                          size: Size.fromHeight(mq.height * 0.02),
+                          size: Size.fromHeight(
+                            mq.height * (signup_login ? 0.02 : 0.089),
+                          ),
                         ),
                         content,
                       ],

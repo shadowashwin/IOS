@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../Components/Chips.dart';
 import '../Modal/Product.dart';
+import '../SecureStorage/SecureStorageService.dart';
 import 'course_detail_screen.dart';
 
 class StoreTab extends StatefulWidget {
@@ -13,28 +17,51 @@ class StoreTab extends StatefulWidget {
 
 class _StoreTabState extends State<StoreTab> {
   final TextEditingController _search = TextEditingController();
+  final String _base = "https://horribly-superb-bedbug.ngrok-free.app";
 
-  final List<Product> _items = const [
-    Product(
-      title: 'Diploma Theory Papers — June 2024 & December 2024',
-      price: 0,
-      originalPrice: 0,
-      // discountLabel: '',
-      badgeLeft: 'FILES',
-      badgeRight: '',
-      id: '',
-    ),
-    Product(
-      title:
-          'Master Notes: DNB Obstetrics & Gynecology Topic-wise & Year-wise...',
-      price: 0,
-      originalPrice: 0,
-      // discountLabel: '28% OFF',
-      badgeLeft: 'FREE CONTENT',
-      badgeRight: 'FILES',
-      id: '',
-    ),
-  ];
+  late Future<List<Product>> _purchasedFuture;
+
+  Future<List<Product>> fetch() async {
+    final storage = SecureStorageService();
+    final user = await storage.getUserData();
+    final token = user?['token']?.toString();
+    if (token == null || token.isEmpty) {
+      throw Exception('No token found. Please login again.');
+    }
+
+    final uri = Uri.parse('$_base/api/courses/purchased');
+    final res = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed (${res.statusCode}): ${res.body}');
+    }
+
+    final decoded = jsonDecode(res.body);
+    if (decoded is! List) {
+      throw Exception('Unexpected response: expected a List.');
+    }
+
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map((m) => Product.fromCourseJson(m, baseUrl: _base))
+        .toList(growable: false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // ✅ assign the future
+    _purchasedFuture = fetch();
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,73 +83,61 @@ class _StoreTabState extends State<StoreTab> {
           ),
         ),
         const SizedBox(height: 16),
-        // const Text(
-        //   'COURSES IN',
-        //   style: TextStyle(
-        //     color: Colors.black54,
-        //     fontSize: 12,
-        //     letterSpacing: .6,
-        //     fontWeight: FontWeight.w700,
-        //   ),
-        // ),
-        // const SizedBox(height: 6),
-        // Row(
-        //   children: [
-        //     TextButton.icon(
-        //       style: TextButton.styleFrom(padding: EdgeInsets.zero),
-        //       onPressed: () async {
-        //         final picked = await showModalBottomSheet<String>(
-        //           context: context,
-        //           showDragHandle: true,
-        //           builder: (ctx) => ListView(
-        //             children: [
-        //               ListTile(
-        //                 title: const Text('Nursing/Mbbs'),
-        //                 onTap: () => Navigator.pop(ctx, 'Nursing/Mbbs'),
-        //               ),
-        //               ListTile(
-        //                 title: const Text('Dentistry'),
-        //                 onTap: () => Navigator.pop(ctx, 'Dentistry'),
-        //               ),
-        //               ListTile(
-        //                 title: const Text('Pharmacy'),
-        //                 onTap: () => Navigator.pop(ctx, 'Pharmacy'),
-        //               ),
-        //             ],
-        //           ),
-        //         );
-        //         if (picked != null) setState(() => _category = picked);
-        //       },
-        //       icon: const Icon(
-        //         Icons.keyboard_arrow_down_rounded,
-        //         color: AppColors.primaryBlue,
-        //       ),
-        //       label: Text(
-        //         _category,
-        //         style: const TextStyle(
-        //           color: AppColors.primaryBlue,
-        //           fontSize: 18,
-        //           fontWeight: FontWeight.w700,
-        //         ),
-        //       ),
-        //     ),
-        //   ],
-        // ),
         const Divider(height: 32),
-        Text(
-          'Courses (${_items.length})',
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 12),
-        ..._items.map(
-          (p) => Column(
-            children: [
-              StoreListItem(product: p),
-              const SizedBox(height: 12),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-            ],
-          ),
+
+        // Use a FutureBuilder to show count + list
+        FutureBuilder<List<Product>>(
+          future: _purchasedFuture,
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snap.hasError) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: Text('Error: ${snap.error}')),
+              );
+            }
+
+            final items = snap.data ?? const <Product>[];
+            if (items.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: Text('No purchased courses yet')),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dynamic count
+                Text(
+                  'Courses (${items.length})',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 12),
+
+                // Render list INSIDE parent ListView safely
+                ListView.separated(
+                  shrinkWrap: true, // ✅ important when nesting lists
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    final p = items[i];
+                    return Column(
+                      children: [
+                        StoreListItem(product: p),
+                        const SizedBox(height: 12),
+                        const Divider(height: 1),
+                        const SizedBox(height: 12),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -138,7 +153,9 @@ class StoreListItem extends StatelessWidget {
     return InkWell(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => CourseDetailPage(product: product)),
+        MaterialPageRoute(
+          builder: (_) => CourseDetailPage(product: product, screen: "store"),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,11 +171,20 @@ class StoreListItem extends StatelessWidget {
                   border: Border.all(color: const Color(0xFF9BC69E)),
                 ),
                 padding: const EdgeInsets.all(8),
-                child: const Align(
+                child: Align(
                   alignment: Alignment.topLeft,
                   child: Text(
-                    'DNB Obstetrics & Gynecology',
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10),
+                    // Show first bullet/title fallback
+                    (product.bullets.isNotEmpty
+                            ? product.bullets.first
+                            : product.title)
+                        .toUpperCase(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
               ),
@@ -174,7 +200,7 @@ class StoreListItem extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     if (product.badgeLeft.trim().isNotEmpty)
-                      const AppChip('FREE CONTENT'),
+                      AppChip(product.badgeLeft),
                     if (product.badgeRight.trim().isNotEmpty)
                       AppChip(product.badgeRight),
                   ],
@@ -186,37 +212,6 @@ class StoreListItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 8),
-                // Row(
-                //   children: [
-                //     Text(
-                //       '₹ ${product.price.toStringAsFixed(0)}',
-                //       style: const TextStyle(
-                //         fontSize: 16,
-                //         fontWeight: FontWeight.w800,
-                //       ),
-                //     ),
-                //     if (product.hasDiscount) ...[
-                //       const SizedBox(width: 8),
-                //       Text(
-                //         '₹ ${product.originalPrice.toStringAsFixed(0)}',
-                //         style: const TextStyle(
-                //           color: Colors.black54,
-                //           decoration: TextDecoration.lineThrough,
-                //           decorationThickness: 2,
-                //         ),
-                //       ),
-                //       const SizedBox(width: 8),
-                //       Text(
-                //         product.discountLabel,
-                //         style: const TextStyle(
-                //           color: AppColors.discount,
-                //           fontWeight: FontWeight.w600,
-                //         ),
-                //       ),
-                //     ],
-                //   ],
-                // ),
               ],
             ),
           ),
