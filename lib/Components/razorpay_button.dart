@@ -13,8 +13,8 @@ class RazorpayPayButton extends StatefulWidget {
   const RazorpayPayButton({
     super.key,
     required this.product,
-    required this.currentPrice, // in rupees
-    this.razorpayKey = 'rzp_test_XXXXXXXX', // <-- replace with your key
+    required this.currentPrice,
+    this.razorpayKey = 'rzp_test_XXXXXXXX',
     this.companyName = 'Miraki Media',
     this.userEmailFallback = 'user@example.com',
   });
@@ -54,39 +54,6 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
   void dispose() {
     _razorpay.clear();
     super.dispose();
-  }
-
-  Future<void> _openCheckout() async {
-    // guard: zero-price
-    final priceRupees = double.tryParse(widget.currentPrice) ?? 0.0;
-    if (priceRupees <= 0) return;
-
-    // Razorpay expects amount in *paise* (integer)
-
-    final created = await createOrder(courseId: widget.product.id);
-    final amountPaise = (priceRupees * 100).round();
-
-    final options = {
-      'key': widget.razorpayKey,
-      // 'amount': amountPaise,
-      'order_id': created.orderId,
-      'amount': created.amountPaise,
-      'name': widget.companyName,
-      'description': widget.product.title,
-      // If you create an order on your server, include: 'order_id': '<server-order-id>',
-      'prefill': {
-        'contact': _prefillPhone ?? '',
-        'email': widget.userEmailFallback,
-      },
-      'theme': {'color': '#0AA5DE'},
-      if (Platform.isAndroid) 'retry': {'enabled': true, 'max_count': 1},
-    };
-
-    try {
-      _razorpay.open(options);
-    } catch (e) {
-      _snack('Failed to open payment: $e', isError: true);
-    }
   }
 
   Future<({String orderId, int amountPaise})> createOrder({
@@ -130,12 +97,64 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
       throw Exception('Invalid server response: missing order fields.');
     }
 
-    final String orderId = order['id'].toString(); // e.g. order_RJzzdjnr2o5MzW
+    final String orderId = order['id'].toString();
+    print(orderId); // e.g. order_RJzzdjnr2o5MzW
     final int amountPaise = (order['amount'] as num)
         .toInt(); // Razorpay expects paise
 
     return (orderId: orderId, amountPaise: amountPaise);
   }
+
+  Future<String> fetchRazorpayKey() async {
+    try {
+      // Replace with your actual backend URL
+      final uri = Uri.parse("$base/api/get-key");
+      final res = await http.get(uri);
+
+      if (res.statusCode == 200) {
+        final decoded = jsonDecode(res.body);
+        final key = decoded['key']?.toString() ?? '';
+        if (key.isEmpty) throw Exception("Key not found in response");
+        return key;
+      } else {
+        throw Exception("Failed to fetch key: ${res.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Error fetching Razorpay key: $e");
+    }
+  }
+
+  Future<void> _openCheckout() async {
+    final created = await createOrder(courseId: widget.product.id);
+    final key = await fetchRazorpayKey();
+
+    print("Order ID: ${created.orderId}");
+    print("Amount Paise (from server): ${created.amountPaise}");
+    print("Razorpay Key: $key");
+
+    final options = {
+      'key': key,
+      'order_id': created.orderId,
+      'amount': created.amountPaise,
+      'currency': "INR",
+      'name': widget.companyName,
+      'description': widget.product.title,
+      'notes': {'course_id': widget.product.id}, // optional
+      'prefill': {
+        'contact': _prefillPhone ?? '',
+        'email': widget.userEmailFallback,
+      },
+      'theme': {'color': '#0AA5DE'},
+      if (Platform.isAndroid) 'retry': {'enabled': true, 'max_count': 1},
+    };
+
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      _snack('Failed to open payment: $e', isError: true);
+    }
+  }
+
   //
   // Future<void> _openCheckout() async {
   //   final priceRupees = double.tryParse(widget.currentPrice) ?? 0.0;
@@ -166,12 +185,65 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
   //     _snack('Failed to open payment: $e', isError: true);
   //   }
   // }
+  Future<void> _verifyPaymentOnServer({
+    required String orderId,
+    required String paymentId,
+    required String signature,
+    required String courseId, // optional but handy to grant access
+  }) async {
+    final storage = SecureStorageService();
+    final user = await storage.getUserData();
+    final token = (user?['token'] ?? '').toString();
 
-  void _handlePaymentSuccess(PaymentSuccessResponse r) {
-    // r.paymentId, r.orderId, r.signature
-    _snack('Payment Success: ${r.paymentId}');
-    // TODO: (recommended) verify payment on your backend using r.orderId/r.paymentId/r.signature
-    // You can also mark product as purchased here or navigate to a success screen.
+    final uri = Uri.parse('$base/api/payment/verification');
+
+    final payload = {
+      'razorpay_order_id': orderId,
+      'razorpay_payment_id': paymentId,
+      'razorpay_signature': signature,
+      // include any app context you need on the backend
+      'course_id': courseId,
+    };
+
+    final res = await http.post(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(payload),
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception('Verification failed (${res.statusCode}): ${res.body}');
+    }
+
+    // Optionally parse your API response
+    final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+    final success = decoded['success'] == true;
+
+    if (!success) {
+      throw Exception('Server reported verification failure');
+    }
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse r) async {
+    try {
+      // r.paymentId, r.orderId, r.signature come from the Razorpay Flutter plugin
+      await _verifyPaymentOnServer(
+        orderId: r.orderId!,
+        paymentId: r.paymentId!,
+        signature: r.signature!, // null-safety: plugin provides it on success
+        courseId: widget.product.id, // so backend can grant access
+      );
+
+      _snack('Payment verified ✓');
+      // TODO: unlock course / navigate to success page, etc.
+    } catch (e) {
+      _snack('Payment success but verification failed: $e', isError: true);
+      // (Optional) navigate to a “pending verification” screen
+    }
   }
 
   void _handlePaymentError(PaymentFailureResponse r) {
