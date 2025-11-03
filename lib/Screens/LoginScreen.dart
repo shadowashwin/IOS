@@ -28,7 +28,7 @@ class _LoginscreenState extends State<Loginscreen> {
   final _mobileController = TextEditingController();
   final _otpController = TextEditingController();
   final _otpFocusNode = FocusNode();
-  String apiBaseUrl = "https://horribly-superb-bedbug.ngrok-free.app";
+  String apiBaseUrl = "https://backend.obgynprep.store";
 
   int _resendCooldown = 0;
   String server_otp = "";

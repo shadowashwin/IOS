@@ -146,7 +146,7 @@ class _GalleryRowState extends State<_GalleryRow> {
   late final PageController _pageController;
   int _index = 0;
   static const String base =
-      "https://horribly-superb-bedbug.ngrok-free.app/api/courses";
+      "https://backend.obgynprep.store/api/courses";
 
   static Future<Map<String, dynamic>> fetchCoursePdf(String id) async {
     final storage = SecureStorageService();

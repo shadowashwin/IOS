@@ -32,7 +32,7 @@ class RazorpayPayButton extends StatefulWidget {
 class _RazorpayPayButtonState extends State<RazorpayPayButton> {
   late final Razorpay _razorpay;
   String? _prefillPhone;
-  final String base = "https://horribly-superb-bedbug.ngrok-free.app";
+  final String base = "https://backend.obgynprep.store";
 
   @override
   void initState() {

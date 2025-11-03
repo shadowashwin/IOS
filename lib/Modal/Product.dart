@@ -89,7 +89,7 @@ class ProductApi {
   }
 
   static Future<List<Product>> fetch({String? baseUrlOverride}) async {
-    final base = "https://horribly-superb-bedbug.ngrok-free.app";
+    final base = "https://backend.obgynprep.store";
 
     final uri = Uri.parse('$base$_path');
     final token = await _getToken();

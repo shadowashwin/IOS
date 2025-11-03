@@ -35,7 +35,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
 
       // Use 10.0.2.2 for Android emulator, or your machine's LAN IP on device
       final url =
-          "https://horribly-superb-bedbug.ngrok-free.app/api/courses/${widget.courseId}/pdf";
+          "https://backend.obgynprep.store/api/courses/${widget.courseId}/pdf";
 
       final res = await http.get(
         Uri.parse(url),

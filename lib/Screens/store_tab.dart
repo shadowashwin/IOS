@@ -17,7 +17,7 @@ class StoreTab extends StatefulWidget {
 
 class _StoreTabState extends State<StoreTab> {
   final TextEditingController _search = TextEditingController();
-  final String _base = "https://horribly-superb-bedbug.ngrok-free.app";
+  final String _base = "https://backend.obgynprep.store";
 
   late Future<List<Product>> _purchasedFuture;
 
