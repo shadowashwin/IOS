@@ -31,7 +31,7 @@ class _LoginscreenState extends State<Loginscreen> {
   String apiBaseUrl = "https://backend.obgynprep.store";
 
   int _resendCooldown = 0;
-  String server_otp = "";
+  // String server_otp = "";
   Timer? _resendTimer;
 
   bool get _isResendDisabled => _resendCooldown > 0;
@@ -68,7 +68,7 @@ class _LoginscreenState extends State<Loginscreen> {
   Future<bool> _verifyOtp(String otp) async {
     // pretend verifying OTP via API
     await Future.delayed(const Duration(milliseconds: 500));
-    return otp == server_otp && server_otp.length == 6; // demo only
+    return otp == otp && otp.length == 6; // demo only
   }
 
   Future<Map<String, dynamic>> verifyOtp({
@@ -110,10 +110,6 @@ class _LoginscreenState extends State<Loginscreen> {
       );
       return;
     }
-
-    // Optional: show loading state in your UI if you track one
-    // setState(() => _isLoading = true);
-
     try {
       final uri = Uri.parse('${apiBaseUrl}/api/users/validate-org-code');
       final resp = await http
@@ -162,28 +158,28 @@ class _LoginscreenState extends State<Loginscreen> {
     }
   }
 
-  Future<String?> fetchOtp(String phoneNumber) async {
-    // NOTE: Use http://10.0.2.2:5000 if testing on Android Emulator
-    final url = Uri.parse('$apiBaseUrl/api/users/dev/get-otp/$phoneNumber');
-
-    final response = await http.get(
-      url,
-      headers: {'Accept': 'application/json'},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      // If server responds like { "otp": "378378" }
-      if (data is Map && data.containsKey('otp')) {
-        return data['otp'].toString();
-      }
-      throw Exception('OTP field not found in response: $data');
-    } else {
-      print('Error: ${response.statusCode} - ${response.body}');
-      return null;
-    }
-  }
+  // Future<String?> fetchOtp(String phoneNumber) async {
+  //   // NOTE: Use http://10.0.2.2:5000 if testing on Android Emulator
+  //   final url = Uri.parse('$apiBaseUrl/api/users/dev/get-otp/$phoneNumber');
+  //
+  //   final response = await http.get(
+  //     url,
+  //     headers: {'Accept': 'application/json'},
+  //   );
+  //
+  //   if (response.statusCode == 200) {
+  //     final data = jsonDecode(response.body);
+  //
+  //     // If server responds like { "otp": "378378" }
+  //     if (data is Map && data.containsKey('otp')) {
+  //       return data['otp'].toString();
+  //     }
+  //     throw Exception('OTP field not found in response: $data');
+  //   } else {
+  //     print('Error: ${response.statusCode} - ${response.body}');
+  //     return null;
+  //   }
+  // }
 
   void _onRegisterSubmit() async {
     final name = _nameController.text.trim();
@@ -228,28 +224,27 @@ class _LoginscreenState extends State<Loginscreen> {
                 .timeout(const Duration(seconds: 8));
       print(resp.body);
       if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body) as Map<String, dynamic>;
-        final isValid = data['message'] == "otp sent";
-
-        if (isValid) {
-          setState(() => _stage = _Stage.otp);
-          final otp = await fetchOtp(mobile);
-          print(otp);
-          setState(() {
-            server_otp = otp!;
-          });
-        } else {
-          _showBottomMessage(
-            icon: Icons.error_outline,
-            color: Colors.red,
-            text: 'Invalid cred',
-          );
-        }
+        // final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        // final isValid = data['message'] == "otp sent";
+        // if (isValid) {
+        setState(() => _stage = _Stage.otp);
+        // final otp = await fetchOtp(mobile);
+        // print(otp);
+        // setState(() {
+        //   server_otp = otp!;
+        // });
+        // } else {
+        //   _showBottomMessage(
+        //     icon: Icons.error_outline,
+        //     color: Colors.red,
+        //     text: 'Invalid cred',
+        //   );
+        // }
       } else {
         _showBottomMessage(
           icon: Icons.error_outline,
           color: Colors.red,
-          text: 'Server error (${resp.statusCode})',
+          text: 'User already exists',
         );
       }
     } catch (e) {

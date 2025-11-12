@@ -1,13 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 import '../Components/Chips.dart';
 import '../Components/pdfviewer.dart';
 import '../Components/sticky_buy_bar.dart';
 import '../Modal/Product.dart';
-import '../SecureStorage/SecureStorageService.dart';
 
 class CourseDetailPage extends StatelessWidget {
   const CourseDetailPage({
@@ -36,7 +32,7 @@ class CourseDetailPage extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
-        body: OverviewTab(product: product),
+        body: OverviewTab(product: product, screen: screen),
         bottomNavigationBar: screen == "store"
             ? Container(height: 0)
             : StickyBuyBar(product: product),
@@ -46,8 +42,9 @@ class CourseDetailPage extends StatelessWidget {
 }
 
 class OverviewTab extends StatelessWidget {
-  const OverviewTab({super.key, required this.product});
+  const OverviewTab({super.key, required this.product, required this.screen});
   final Product product;
+  final String screen;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +56,7 @@ class OverviewTab extends StatelessWidget {
         const SizedBox(height: 10),
         _TagsRow(badgeLeft: product.badgeLeft, badgeRight: product.badgeRight),
         const SizedBox(height: 12),
-        _GalleryRow(images: product.images, id: product.id),
+        _GalleryRow(images: product.images, id: product.id, screen: screen),
         const SizedBox(height: 16),
         const Divider(height: 1),
         const SizedBox(height: 16),
@@ -134,8 +131,13 @@ class _TagsRow extends StatelessWidget {
 /// LEFT: slideable image panel (uses product.images)
 /// RIGHT: PDF card
 class _GalleryRow extends StatefulWidget {
-  const _GalleryRow({required this.images, required this.id});
+  const _GalleryRow({
+    required this.images,
+    required this.id,
+    required this.screen,
+  });
   final List<String> images;
+  final String screen;
   final String id;
 
   @override
@@ -145,30 +147,6 @@ class _GalleryRow extends StatefulWidget {
 class _GalleryRowState extends State<_GalleryRow> {
   late final PageController _pageController;
   int _index = 0;
-  static const String base =
-      "https://backend.obgynprep.store/api/courses";
-
-  static Future<Map<String, dynamic>> fetchCoursePdf(String id) async {
-    final storage = SecureStorageService();
-    final user = await storage.getUserData();
-    final token = user?['token'];
-
-    if (token == null) {
-      throw Exception("No token found in storage.");
-    }
-
-    final uri = Uri.parse("$base/$id/pdf");
-    final res = await http.get(
-      uri,
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
-    );
-
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body);
-    } else {
-      throw Exception("Failed to fetch PDF (${res.statusCode}): ${res.body}");
-    }
-  }
 
   @override
   void initState() {
@@ -230,12 +208,18 @@ class _GalleryRowState extends State<_GalleryRow> {
               aspectRatio: 16 / 12,
               child: InkWell(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PdfViewerPage(courseId: widget.id),
-                    ),
-                  );
+                  if (widget.screen != "store") {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text("Buy to view pdf")));
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PdfViewerPage(courseId: widget.id),
+                      ),
+                    );
+                  }
                 },
                 child: Container(
                   decoration: BoxDecoration(

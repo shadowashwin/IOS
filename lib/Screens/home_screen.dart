@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -18,7 +18,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   final List<String> _titles = ['Home', 'Store', 'Chats', 'Profile'];
 
@@ -28,19 +28,53 @@ class _HomeScreenState extends State<HomeScreen> {
   String token = "";
   String name = "";
 
+  // ----- LIFECYCLE -----
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    productsFuture = ProductApi.fetch();
+    loadUserData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Called when app comes to foreground or user returns to this screen.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshProducts(); // auto refresh on resume
+    }
+  }
+
+  // ----- DATA LOAD / REFRESH -----
   Future<void> loadUserData() async {
     final storage = SecureStorageService();
-    final user = await storage.getUserData(); // await here!
+    final user = await storage.getUserData();
 
     if (user != null) {
       setState(() {
         token = (user['token'] ?? '').toString();
         name = (user['name'] ?? '').toString();
-        _titles[3] = name;
+        if (name.isNotEmpty) _titles[3] = name;
       });
     }
   }
 
+  /// Triggers a refresh of the products list (used by pull-to-refresh & lifecycle)
+  Future<void> _refreshProducts() async {
+    setState(() {
+      productsFuture = ProductApi.fetch();
+    });
+    // Give UI a tiny moment so the RefreshIndicator shows smoothly
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+  }
+
+  // ----- AUTH -----
   Future<void> logout({bool androidEmulator = false}) async {
     final storage = SecureStorageService();
     final user = await storage.getUserData();
@@ -50,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final token = user['token'];
-    final uri = Uri.parse('${base}/api/users/logout');
+    final uri = Uri.parse('$base/api/users/logout');
 
     final res = await http.post(
       uri,
@@ -58,14 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
       await storage.clearUserData();
-      // BottomMessage.show(
-      //   context,
-      //   text: 'Logged Out!',
-      //   type: BottomMessageType.success,
-      //   autoCloseAfter: const Duration(seconds: 2),
-      // );
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Loginscreen()),
@@ -123,15 +151,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    productsFuture = ProductApi.fetch();
-    loadUserData();
-  }
-
+  // ----- UI -----
   @override
   Widget build(BuildContext context) {
+    final firstLetter = name.isNotEmpty
+        ? name.characters.first.toUpperCase()
+        : '?';
+
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
@@ -143,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
               radius: 16,
               backgroundColor: Colors.white,
               child: Text(
-                name[0].toUpperCase(),
+                firstLetter,
                 style: TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.bold,
@@ -167,48 +193,89 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () async {
                 final shouldLogout = await _showLogoutConfirmDialog(context);
                 if (shouldLogout == true) {
-                  await logout(androidEmulator: true); // call your function
+                  await logout(androidEmulator: true);
                 }
               },
             ),
           ),
         ],
       ),
+
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          FutureBuilder<List<Product>>(
-            future: productsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+          // HOME TAB — with RefreshIndicator
+          RefreshIndicator(
+            onRefresh: _refreshProducts,
+            child: FutureBuilder<List<Product>>(
+              future: productsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  // Make RefreshIndicator work even while waiting
+                  return ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SizedBox(height: 240),
+                      Center(child: CircularProgressIndicator()),
+                      SizedBox(height: 800), // keep scrollable
+                    ],
+                  );
+                }
+                if (snapshot.hasError) {
+                  return ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      const SizedBox(height: 240),
+                      Center(child: Text('Error: ${snapshot.error}')),
+                      const SizedBox(height: 800),
+                    ],
+                  );
+                }
 
-              final products = snapshot.data ?? const <Product>[];
-              if (products.isEmpty) {
-                return const Center(child: Text('No courses available'));
-              }
+                final products = snapshot.data ?? const <Product>[];
+                if (products.isEmpty) {
+                  return ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SizedBox(height: 240),
+                      Center(child: Text('No courses available')),
+                      SizedBox(height: 800),
+                    ],
+                  );
+                }
 
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-                itemCount: products.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (context, index) =>
-                    ProductCard(product: products[index]),
-              );
-            },
+                return ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                  itemCount: products.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) =>
+                      ProductCard(product: products[index]),
+                );
+              },
+            ),
           ),
+
+          // STORE TAB
           const StoreTab(),
+
+          // CHATS (placeholder)
           const SizedBox.shrink(),
+
+          // PROFILE
           const ProfileTab(),
         ],
       ),
+
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (i) => setState(() => _currentIndex = i),
+        onDestinationSelected: (i) {
+          setState(() => _currentIndex = i);
+          if (i == 0) {
+            // If user switches back to Home tab, refresh
+            _refreshProducts();
+          }
+        },
         backgroundColor: Colors.white,
         indicatorColor: AppColors.primaryBlue.withOpacity(.12),
         destinations: const [

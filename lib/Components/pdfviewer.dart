@@ -46,8 +46,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
       );
 
       if (res.statusCode != 200) {
-        throw Exception("Failed to load PDF: ${res.statusCode}");
+        // throw Exception("Failed to load PDF: ${res.statusCode}");
       }
+
+      print(res.body);
 
       // The API returns JSON with {"fileName": "...", "data": "<base64>"}
       final Map<String, dynamic> json = jsonDecode(res.body);
@@ -100,8 +102,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
       appBar: AppBar(title: const Text("Course PDF")),
       body: PDFView(
         filePath: _localFilePath!,
-        enableSwipe: true,
-        swipeHorizontal: true,
+        enableSwipe: true, // still allow swiping
+        swipeHorizontal: false, // 👈 set this to false
         autoSpacing: true,
         pageFling: true,
         onError: (error) {

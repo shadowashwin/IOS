@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -15,12 +16,13 @@ class StoreTab extends StatefulWidget {
   State<StoreTab> createState() => _StoreTabState();
 }
 
-class _StoreTabState extends State<StoreTab> {
+class _StoreTabState extends State<StoreTab> with WidgetsBindingObserver {
   final TextEditingController _search = TextEditingController();
   final String _base = "https://backend.obgynprep.store";
 
   late Future<List<Product>> _purchasedFuture;
 
+  // ---------- API ----------
   Future<List<Product>> fetch() async {
     final storage = SecureStorageService();
     final user = await storage.getUserData();
@@ -50,96 +52,133 @@ class _StoreTabState extends State<StoreTab> {
         .toList(growable: false);
   }
 
+  // ---------- REFRESH HELPERS ----------
+  Future<void> _refreshPurchased() async {
+    setState(() {
+      _purchasedFuture = fetch();
+    });
+    // tiny delay so RefreshIndicator animates smoothly
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+  }
+
+  // ---------- LIFECYCLE ----------
   @override
   void initState() {
     super.initState();
-    // ✅ assign the future
-    _purchasedFuture = fetch();
+    WidgetsBinding.instance.addObserver(this);
+    _purchasedFuture = fetch(); // initial load
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Called when this screen becomes active again after navigation changes.
+    // Keep it light: schedule to avoid multiple immediate setStates.
+    scheduleMicrotask(_refreshPurchased);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // When app comes to foreground, refresh the list.
+    if (state == AppLifecycleState.resumed) {
+      _refreshPurchased();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _search.dispose();
     super.dispose();
   }
 
+  // ---------- UI ----------
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-      children: [
-        TextField(
-          controller: _search,
-          decoration: InputDecoration(
-            hintText: 'Search by Name',
-            prefixIcon: const Icon(Icons.search),
-            filled: true,
-            fillColor: const Color(0xFFF0F2F5),
-            contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+    return RefreshIndicator(
+      onRefresh: _refreshPurchased,
+      child: ListView(
+        physics:
+            const AlwaysScrollableScrollPhysics(), // enables pull even if short
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+        children: [
+          TextField(
+            controller: _search,
+            decoration: InputDecoration(
+              hintText: 'Search by Name',
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: const Color(0xFFF0F2F5),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        const Divider(height: 32),
+          const SizedBox(height: 16),
+          const Divider(height: 32),
 
-        // Use a FutureBuilder to show count + list
-        FutureBuilder<List<Product>>(
-          future: _purchasedFuture,
-          builder: (context, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: Text('Error: ${snap.error}')),
+          FutureBuilder<List<Product>>(
+            future: _purchasedFuture,
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                // keep it scrollable so pull-to-refresh still works
+                return Column(
+                  children: const [
+                    SizedBox(height: 200),
+                    Center(child: CircularProgressIndicator()),
+                    SizedBox(height: 400),
+                  ],
+                );
+              }
+              if (snap.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: Text('Error: ${snap.error}')),
+                );
+              }
+
+              final items = snap.data ?? const <Product>[];
+              if (items.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: Text('No purchased courses yet')),
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Courses (${items.length})',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 12),
+
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) {
+                      final p = items[i];
+                      return Column(
+                        children: [
+                          StoreListItem(product: p),
+                          const SizedBox(height: 12),
+                          const Divider(height: 1),
+                          const SizedBox(height: 12),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               );
-            }
-
-            final items = snap.data ?? const <Product>[];
-            if (items.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: Text('No purchased courses yet')),
-              );
-            }
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Dynamic count
-                Text(
-                  'Courses (${items.length})',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 12),
-
-                // Render list INSIDE parent ListView safely
-                ListView.separated(
-                  shrinkWrap: true, // ✅ important when nesting lists
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) {
-                    final p = items[i];
-                    return Column(
-                      children: [
-                        StoreListItem(product: p),
-                        const SizedBox(height: 12),
-                        const Divider(height: 1),
-                        const SizedBox(height: 12),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            );
-          },
-        ),
-      ],
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -174,7 +213,6 @@ class StoreListItem extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: Text(
-                    // Show first bullet/title fallback
                     (product.bullets.isNotEmpty
                             ? product.bullets.first
                             : product.title)
