@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:obgynprep/Screens/LoginScreen.dart';
+import 'package:obgynprep/Screens/chat_tab.dart';
 import 'package:obgynprep/Screens/profile_tab.dart';
 import 'package:obgynprep/Screens/store_tab.dart';
 
@@ -162,27 +163,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       appBar: AppBar(
         titleSpacing: 0,
         leadingWidth: 60,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Center(
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.white,
-              child: Text(
-                firstLetter,
-                style: TextStyle(
-                  color: AppColors.primaryBlue,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+        // leading: Padding(
+        //   padding: const EdgeInsets.only(left: 12),
+        //   child: Center(
+        //     child: CircleAvatar(
+        //       radius: 16,
+        //       backgroundColor: Colors.white,
+        //       child: Text(
+        //         firstLetter,
+        //         style: TextStyle(
+        //           color: AppColors.primaryBlue,
+        //           fontWeight: FontWeight.bold,
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // ),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: Text(
+            _titles[_currentIndex],
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
             ),
-          ),
-        ),
-        title: Text(
-          _titles[_currentIndex],
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
@@ -260,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const StoreTab(),
 
           // CHATS (placeholder)
-          const SizedBox.shrink(),
+          const ChatTab(),
 
           // PROFILE
           const ProfileTab(),

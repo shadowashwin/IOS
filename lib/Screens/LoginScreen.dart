@@ -126,6 +126,8 @@ class _LoginscreenState extends State<Loginscreen> {
 
         if (isValid) {
           setState(() => _stage = _Stage.register);
+          final storage = SecureStorageService();
+          await storage.saveUserData({"OrgCode": code});
         } else {
           _showBottomMessage(
             icon: Icons.error_outline,

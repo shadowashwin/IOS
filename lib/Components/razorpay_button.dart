@@ -32,6 +32,7 @@ class RazorpayPayButton extends StatefulWidget {
 class _RazorpayPayButtonState extends State<RazorpayPayButton> {
   late final Razorpay _razorpay;
   String? _prefillPhone;
+  bool _isLoading = false;
   final String base = "https://backend.obgynprep.store";
 
   @override
@@ -125,66 +126,39 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
   }
 
   Future<void> _openCheckout() async {
-    final created = await createOrder(courseId: widget.product.id);
-    final key = await fetchRazorpayKey();
-
-    print("Order ID: ${created.orderId}");
-    print("Amount Paise (from server): ${created.amountPaise}");
-    print("Razorpay Key: $key");
-
-    final options = {
-      'key': key,
-      'order_id': created.orderId,
-      'amount': created.amountPaise,
-      'currency': "INR",
-      'name': widget.companyName,
-      'description': widget.product.title,
-      'notes': {'course_id': widget.product.id}, // optional
-      'prefill': {
-        'contact': _prefillPhone ?? '',
-        'email': widget.userEmailFallback,
-      },
-      'theme': {'color': '#0AA5DE'},
-      if (Platform.isAndroid) 'retry': {'enabled': true, 'max_count': 1},
-    };
+    setState(() => _isLoading = true);
 
     try {
+      final created = await createOrder(courseId: widget.product.id);
+      final key = await fetchRazorpayKey();
+
+      print("Order ID: ${created.orderId}");
+      print("Amount Paise (from server): ${created.amountPaise}");
+      print("Razorpay Key: $key");
+
+      final options = {
+        'key': key,
+        'order_id': created.orderId,
+        'amount': created.amountPaise,
+        'currency': "INR",
+        'name': widget.companyName,
+        'description': widget.product.title,
+        'notes': {'course_id': widget.product.id},
+        'prefill': {
+          'contact': _prefillPhone ?? '',
+          'email': widget.userEmailFallback,
+        },
+        'theme': {'color': '#0AA5DE'},
+        if (Platform.isAndroid) 'retry': {'enabled': true, 'max_count': 1},
+      };
+
       _razorpay.open(options);
     } catch (e) {
       _snack('Failed to open payment: $e', isError: true);
+      setState(() => _isLoading = false);
     }
   }
 
-  //
-  // Future<void> _openCheckout() async {
-  //   final priceRupees = double.tryParse(widget.currentPrice) ?? 0.0;
-  //   if (priceRupees <= 0) return;
-  //
-  //   // 1) Create Razorpay order on your server
-  //   final created = await createOrder(courseId: widget.product.id);
-  //
-  //   // 2) Build checkout options — do NOT pass 'amount' or 'currency' when order_id is used
-  //   final options = {
-  //     'key': widget
-  //         .razorpayKey, // must match the key used to create the order on server
-  //     'order_id': created.orderId, // <-- only this controls amount/currency
-  //     'name': widget.companyName,
-  //     'description': widget.product.title,
-  //     'notes': {'course_id': widget.product.id},
-  //     'prefill': {
-  //       'contact': _prefillPhone ?? '',
-  //       'email': widget.userEmailFallback,
-  //     },
-  //     'theme': {'color': '#0AA5DE'},
-  //     if (Platform.isAndroid) 'retry': {'enabled': true, 'max_count': 1},
-  //   };
-  //
-  //   try {
-  //     _razorpay.open(options);
-  //   } catch (e) {
-  //     _snack('Failed to open payment: $e', isError: true);
-  //   }
-  // }
   Future<void> _verifyPaymentOnServer({
     required String orderId,
     required String paymentId,
@@ -263,9 +237,26 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
     );
   }
 
+  Future<void> _handleCheckout() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _openCheckout(); // your existing method
+    } catch (e) {
+      _snack('Failed to open payment: $e', isError: true);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isFree = widget.currentPrice == "0" || widget.currentPrice == "0.0";
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         elevation: isFree ? 0 : 10,
@@ -273,11 +264,23 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      onPressed: isFree ? null : _openCheckout,
-      child: Text(
-        isFree ? "" : 'Buy now',
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ),
+      // Disable when free OR loading
+      onPressed: (isFree || _isLoading) ? null : _handleCheckout,
+      child: isFree
+          ? const SizedBox.shrink()
+          : _isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          : const Text(
+              'Buy now',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
     );
   }
 }

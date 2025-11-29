@@ -145,6 +145,7 @@ class SectionBasicInformation extends StatefulWidget {
 class _SectionBasicInformationState extends State<SectionBasicInformation> {
   String _name = '';
   String _phone = '';
+  String _orgCode = "";
 
   @override
   void initState() {
@@ -159,6 +160,7 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
     setState(() {
       _name = (user?['name'] ?? '').toString();
       _phone = (user?['phone'] ?? '').toString();
+      _orgCode = (user?['OrgCode']).toString();
     });
   }
 
@@ -183,10 +185,10 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
         ),
 
         // static rows can stay const
-        const InfoRow(
+        InfoRow(
           icon: Icons.mail_outline,
           label: 'Email',
-          value: '—  —  —  —  —  —  —  —',
+          value: _orgCode.isEmpty ? '—' : _orgCode,
         ),
         const InfoRow(
           icon: Icons.info_outline,
