@@ -15,8 +15,8 @@ class RazorpayPayButton extends StatefulWidget {
     required this.product,
     required this.currentPrice,
     this.razorpayKey = 'rzp_test_XXXXXXXX',
-    this.companyName = 'Miraki Media',
-    this.userEmailFallback = 'user@example.com',
+    this.companyName = 'OBGYN Prep - Dr Pallavi Soni',
+    // this.userEmailFallback = 'user@example.com',
   });
 
   final Product product;
