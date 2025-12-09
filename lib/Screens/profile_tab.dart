@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Components/app_number_badge.dart';
 import '../SecureStorage/SecureStorageService.dart';
@@ -157,10 +158,11 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
     final storage = SecureStorageService();
     final user = await storage.getUserData();
     if (!mounted) return; // safety
-    setState(() {
+    setState(() async {
       _name = (user?['name'] ?? '').toString();
       _phone = (user?['phone'] ?? '').toString();
-      _orgCode = (user?['OrgCode']).toString();
+      final prefs = await SharedPreferences.getInstance();
+      _orgCode = prefs.getString('username')!;
     });
   }
 
@@ -186,8 +188,8 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
 
         // static rows can stay const
         InfoRow(
-          icon: Icons.mail_outline,
-          label: 'Email',
+          icon: Icons.business,
+          label: 'OrgCode',
           value: _orgCode.isEmpty ? '—' : _orgCode,
         ),
         const InfoRow(

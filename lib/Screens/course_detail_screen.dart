@@ -98,12 +98,12 @@ class _TitleLikesRow extends StatelessWidget {
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
           ),
-          Column(
-            children: const [
-              Icon(Icons.add_shopping_cart_outlined, size: 25),
-              SizedBox(height: 4),
-            ],
-          ),
+          // Column(
+          //   children: const [
+          //     Icon(Icons.add_shopping_cart_outlined, size: 25),
+          //     SizedBox(height: 4),
+          //   ],
+          // ),
         ],
       ),
     );

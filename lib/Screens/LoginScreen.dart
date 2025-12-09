@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pinput/pinput.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Components/BuildButton.dart';
 import '../Components/BuildTextfield.dart';
@@ -126,8 +127,8 @@ class _LoginscreenState extends State<Loginscreen> {
 
         if (isValid) {
           setState(() => _stage = _Stage.register);
-          final storage = SecureStorageService();
-          await storage.saveUserData({"OrgCode": code});
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('username', code);
         } else {
           _showBottomMessage(
             icon: Icons.error_outline,
