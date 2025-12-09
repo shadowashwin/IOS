@@ -15,8 +15,8 @@ class RazorpayPayButton extends StatefulWidget {
     required this.product,
     required this.currentPrice,
     this.razorpayKey = 'rzp_test_XXXXXXXX',
-    this.companyName = 'Miraki Media',
-    this.userEmailFallback = 'user@example.com',
+    this.companyName = 'OBGYN Prep - Dr Pallavi Soni',
+    // this.userEmailFallback = 'user@example.com',
   });
 
   final Product product;
@@ -77,6 +77,9 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
       "courses": [courseId], // your API expects an array
     };
 
+    debugPrint('Checkout request → $uri');
+    debugPrint('Checkout body → $body');
+
     final res = await http.post(
       uri,
       headers: {
@@ -86,6 +89,9 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
       },
       body: jsonEncode(body),
     );
+
+    debugPrint('Checkout response status: ${res.statusCode}');
+    debugPrint('Checkout response body: ${res.body}');
 
     if (res.statusCode != 200) {
       throw Exception('Checkout failed (${res.statusCode}): ${res.body}');
@@ -103,6 +109,9 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
     final int amountPaise = (order['amount'] as num)
         .toInt(); // Razorpay expects paise
 
+    debugPrint('Created orderId: $orderId');
+    debugPrint('Amount (paise): $amountPaise');
+
     return (orderId: orderId, amountPaise: amountPaise);
   }
 
@@ -110,7 +119,12 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
     try {
       // Replace with your actual backend URL
       final uri = Uri.parse("$base/api/get-key");
+      debugPrint('Fetching Razorpay key from $uri');
+
       final res = await http.get(uri);
+
+      debugPrint('Get-key status: ${res.statusCode}');
+      debugPrint('Get-key body: ${res.body}');
 
       if (res.statusCode == 200) {
         final decoded = jsonDecode(res.body);
@@ -132,9 +146,11 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
       final created = await createOrder(courseId: widget.product.id);
       final key = await fetchRazorpayKey();
 
-      print("Order ID: ${created.orderId}");
-      print("Amount Paise (from server): ${created.amountPaise}");
-      print("Razorpay Key: $key");
+      debugPrint('Opening Razorpay checkout...');
+      debugPrint('Order ID: ${created.orderId}');
+      debugPrint('Amount Paise (from server): ${created.amountPaise}');
+      debugPrint('Razorpay Key: $key');
+      debugPrint('Prefill phone: $_prefillPhone');
 
       final options = {
         'key': key,
@@ -152,10 +168,13 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
         if (Platform.isAndroid) 'retry': {'enabled': true, 'max_count': 1},
       };
 
+      debugPrint('Razorpay options: $options');
+
       _razorpay.open(options);
     } catch (e) {
       _snack('Failed to open payment: $e', isError: true);
       setState(() => _isLoading = false);
+      debugPrint('Error in _openCheckout: $e');
     }
   }
 
@@ -179,6 +198,9 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
       'course_id': courseId,
     };
 
+    debugPrint('Verifying payment on server → $uri');
+    debugPrint('Verification payload: $payload');
+
     final res = await http.post(
       uri,
       headers: {
@@ -188,6 +210,9 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
       },
       body: jsonEncode(payload),
     );
+
+    debugPrint('Verification response status: ${res.statusCode}');
+    debugPrint('Verification response body: ${res.body}');
 
     if (res.statusCode != 200) {
       throw Exception('Verification failed (${res.statusCode}): ${res.body}');
@@ -203,8 +228,23 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse r) async {
+    debugPrint('====== Razorpay PAYMENT SUCCESS ======');
+    debugPrint('paymentId: ${r.paymentId}');
+    debugPrint('orderId: ${r.orderId}');
+    debugPrint('signature: ${r.signature}');
+    debugPrint('======================================');
+
     try {
-      // r.paymentId, r.orderId, r.signature come from the Razorpay Flutter plugin
+      // In some rare iOS cases, orderId / signature can be null if the plugin misbehaves.
+      if (r.orderId == null || r.signature == null) {
+        debugPrint('Missing orderId or signature in PaymentSuccessResponse.');
+        _snack(
+          'Payment succeeded but verification data is incomplete. Please contact support.',
+          isError: true,
+        );
+        return;
+      }
+
       await _verifyPaymentOnServer(
         orderId: r.orderId!,
         paymentId: r.paymentId!,
@@ -213,18 +253,30 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
       );
 
       _snack('Payment verified ✓');
+
       // TODO: unlock course / navigate to success page, etc.
+      // e.g. Navigator.of(context).pushReplacement(...);
     } catch (e) {
+      debugPrint('Error in _handlePaymentSuccess: $e');
       _snack('Payment success but verification failed: $e', isError: true);
       // (Optional) navigate to a “pending verification” screen
     }
   }
 
   void _handlePaymentError(PaymentFailureResponse r) {
+    debugPrint('====== Razorpay PAYMENT ERROR ======');
+    debugPrint('code: ${r.code}');
+    debugPrint('message: ${r.message}');
+    debugPrint('====================================');
+
     _snack('Payment Failed: ${r.code} ${r.message}', isError: true);
   }
 
   void _handleExternalWallet(ExternalWalletResponse r) {
+    debugPrint('====== Razorpay EXTERNAL WALLET ======');
+    debugPrint('walletName: ${r.walletName}');
+    debugPrint('======================================');
+
     _snack('External Wallet: ${r.walletName}');
   }
 
@@ -245,6 +297,7 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
     try {
       await _openCheckout(); // your existing method
     } catch (e) {
+      debugPrint('Error in _handleCheckout: $e');
       _snack('Failed to open payment: $e', isError: true);
     } finally {
       if (mounted) {
