@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:obgynprep/Screens/home_screen.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../Core/Constants/app_colors.dart';
@@ -16,7 +17,7 @@ class RazorpayPayButton extends StatefulWidget {
     required this.currentPrice,
     this.razorpayKey = 'rzp_test_XXXXXXXX',
     this.companyName = 'OBGYN Prep - Dr Pallavi Soni',
-    // this.userEmailFallback = 'user@example.com',
+    this.userEmailFallback = 'user@example.com',
   });
 
   final Product product;
@@ -252,10 +253,12 @@ class _RazorpayPayButtonState extends State<RazorpayPayButton> {
         courseId: widget.product.id, // so backend can grant access
       );
 
-      _snack('Payment verified ✓');
+      _snack('Payment verified, Please wait.....redirecting');
 
       // TODO: unlock course / navigate to success page, etc.
-      // e.g. Navigator.of(context).pushReplacement(...);
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
     } catch (e) {
       debugPrint('Error in _handlePaymentSuccess: $e');
       _snack('Payment success but verification failed: $e', isError: true);

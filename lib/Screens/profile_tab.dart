@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Components/app_number_badge.dart';
 import '../SecureStorage/SecureStorageService.dart';
@@ -127,9 +126,9 @@ class InfoTab extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 24),
       children: const [
         SectionBasicInformation(),
-        SectionTile(number: 2, title: 'Personal Details'),
-        SectionTile(number: 3, title: 'Address'),
-        SectionTile(number: 4, title: 'Educational Details'),
+        // SectionTile(number: 2, title: 'Personal Details'),
+        // SectionTile(number: 3, title: 'Address'),
+        // SectionTile(number: 4, title: 'Educational Details'),
       ],
     );
   }
@@ -146,7 +145,7 @@ class SectionBasicInformation extends StatefulWidget {
 class _SectionBasicInformationState extends State<SectionBasicInformation> {
   String _name = '';
   String _phone = '';
-  String _orgCode = "";
+  // String _orgCode = "";
 
   @override
   void initState() {
@@ -161,8 +160,8 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
     setState(() async {
       _name = (user?['name'] ?? '').toString();
       _phone = (user?['phone'] ?? '').toString();
-      final prefs = await SharedPreferences.getInstance();
-      _orgCode = prefs.getString('username')!;
+      // final prefs = await SharedPreferences.getInstance();
+      // _orgCode = prefs.getString('username')!;
     });
   }
 
@@ -190,7 +189,8 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
         InfoRow(
           icon: Icons.business,
           label: 'OrgCode',
-          value: _orgCode.isEmpty ? '—' : _orgCode,
+          // value: _orgCode.isEmpty ? '—' : _orgCode,
+          value: "YOOOOO",
         ),
         const InfoRow(
           icon: Icons.info_outline,

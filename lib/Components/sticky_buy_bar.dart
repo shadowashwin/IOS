@@ -62,8 +62,8 @@ class StickyBuyBar extends StatelessWidget {
                 0,
               ), // or your `currentPrice` var
               razorpayKey: 'rzp_test_R5ttHav8WQXEEk', // <-- your Razorpay key
-              companyName: 'Miraki Media',
-              userEmailFallback: 'hello@mirakimedia.com',
+              companyName: 'OBGYN Prep - Dr Pallavi Soni',
+              // userEmailFallback: 'hello@mirakimedia.com',
             ),
           ),
         ],

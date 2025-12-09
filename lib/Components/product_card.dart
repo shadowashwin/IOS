@@ -172,70 +172,81 @@ class ProductCard extends StatelessWidget {
         padding: const EdgeInsets.all(12.0),
         child: Column(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // LEFT: thumbnail / placeholder
-                Flexible(
-                  flex: 38,
-                  child: AspectRatio(
-                    aspectRatio: 16 / 10,
-                    child: _LeftThumb(product: product),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        CourseDetailPage(product: product, screen: "courses"),
                   ),
-                ),
-                const SizedBox(width: 12),
+                );
+              },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // LEFT: thumbnail / placeholder
+                  Flexible(
+                    flex: 38,
+                    child: AspectRatio(
+                      aspectRatio: 16 / 10,
+                      child: _LeftThumb(product: product),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
 
-                // RIGHT: chips, title, price
-                Flexible(
-                  flex: 62,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 6,
-                        children: [
-                          AppChip(product.badgeLeft),
-                          AppChip(product.badgeRight),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        product.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
+                  // RIGHT: chips, title, price
+                  Flexible(
+                    flex: 62,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            AppChip(product.badgeLeft),
+                            AppChip(product.badgeRight),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Text(
-                            '₹ ${product.price.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        const SizedBox(height: 8),
+                        Text(
+                          product.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
                           ),
-                          const SizedBox(width: 10),
-                          if (product.hasDiscount)
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
                             Text(
-                              '₹ ${product.originalPrice.toStringAsFixed(0)}',
+                              '₹ ${product.price.toStringAsFixed(0)}',
                               style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
-                                decoration: TextDecoration.lineThrough,
-                                decorationThickness: 2,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 10),
+                            if (product.hasDiscount)
+                              Text(
+                                '₹ ${product.originalPrice.toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black54,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationThickness: 2,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             SizedBox(

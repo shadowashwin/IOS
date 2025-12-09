@@ -33,7 +33,24 @@ class _ChatTabState extends State<ChatTab> {
               message: "Hello, I need help regarding the product.",
             );
           },
-          child: Text("Click to Chat", style: TextStyle(color: Colors.black)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/images/whatsapp_logo.webp',
+                fit: BoxFit.cover,
+                height: 70,
+              ),
+              Text(
+                "TAP TO CHAT",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

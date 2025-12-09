@@ -42,6 +42,7 @@ dependencies:
   flutter_pdfview: ^1.4.1+1
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.3
+  no_screenshot: ^0.3.1
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +73,7 @@ flutter:
     - assets/images/logo.jpeg
     - assets/images/sql.png
     - assets/images/react.png
+    - assets/images/whatsapp_logo.webp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:no_screenshot/no_screenshot.dart';
 import 'package:obgynprep/Screens/home_screen.dart';
 
 import 'Core/Theme/app_theme.dart';
@@ -9,13 +10,30 @@ void main() {
   runApp(const App());
 }
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  final _noScreenshot = NoScreenshot.instance;
 
   Future<bool> _hasUserData() async {
     final storage = SecureStorageService();
     final user = await storage.getUserData();
     return user != null;
+  }
+
+  Future<void> _disableScreenshots() async {
+    await _noScreenshot.screenshotOff(); // disables screenshot + recording
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _disableScreenshots();
   }
 
   @override
