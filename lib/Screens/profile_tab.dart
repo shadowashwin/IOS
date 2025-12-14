@@ -167,47 +167,75 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
 
   @override
   Widget build(BuildContext context) {
-    return SectionContainer(
-      number: 1,
-      title: 'Basic Information',
-      initiallyExpanded: true,
-      // trailing: TextButton(onPressed: () {}, child: const Text('EDIT')),
-      children: [
-        // dynamic (not const)
-        InfoRow(
-          icon: Icons.person_outline,
-          label: 'Name',
-          value: _name.isEmpty ? '—' : _name,
-        ),
-        InfoRow(
-          icon: Icons.tag,
-          label: 'Mobile Number',
-          value: _phone.isEmpty ? '—' : _phone,
-        ),
+    // return SectionContainer(
+    //   number: 1,
+    //   title: 'Basic Information',
+    //   initiallyExpanded: true,
+    //   // trailing: TextButton(onPressed: () {}, child: const Text('EDIT')),
+    //   children: [
+    //     // dynamic (not const)
+    //     InfoRow(
+    //       icon: Icons.person_outline,
+    //       label: 'Name',
+    //       value: _name.isEmpty ? '—' : _name,
+    //     ),
+    //     InfoRow(
+    //       icon: Icons.tag,
+    //       label: 'Mobile Number',
+    //       value: _phone.isEmpty ? '—' : _phone,
+    //     ),
+    //
+    //     // static rows can stay const
+    //     InfoRow(
+    //       icon: Icons.business,
+    //       label: 'OrgCode',
+    //       // value: _orgCode.isEmpty ? '—' : _orgCode,
+    //       value: "YOOOOO",
+    //     ),
+    //     const InfoRow(
+    //       icon: Icons.info_outline,
+    //       label: 'About',
+    //       value: '—  —  —  —  —  —  —  —',
+    //     ),
+    //     const InfoRow(
+    //       icon: Icons.confirmation_number_outlined,
+    //       label: 'Roll Number',
+    //       value: '—  —  —  —  —  —  —  —',
+    //     ),
+    //     const InfoRow(
+    //       icon: Icons.calendar_today_outlined,
+    //       label: 'Date of Joining',
+    //       value: '—  —  —  —  —  —  —  —',
+    //     ),
+    //   ],
+    // );
+    var mq = MediaQuery.of(context).size;
+    return Container(
+      height: mq.height * 0.5,
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+      child: Column(
+        children: [
+          // dynamic (not const)
+          InfoRow(
+            icon: Icons.person_outline,
+            label: 'Name',
+            value: _name.isEmpty ? '—' : _name,
+          ),
+          InfoRow(
+            icon: Icons.tag,
+            label: 'Mobile Number',
+            value: _phone.isEmpty ? '—' : _phone,
+          ),
 
-        // static rows can stay const
-        InfoRow(
-          icon: Icons.business,
-          label: 'OrgCode',
-          // value: _orgCode.isEmpty ? '—' : _orgCode,
-          value: "YOOOOO",
-        ),
-        const InfoRow(
-          icon: Icons.info_outline,
-          label: 'About',
-          value: '—  —  —  —  —  —  —  —',
-        ),
-        const InfoRow(
-          icon: Icons.confirmation_number_outlined,
-          label: 'Roll Number',
-          value: '—  —  —  —  —  —  —  —',
-        ),
-        const InfoRow(
-          icon: Icons.calendar_today_outlined,
-          label: 'Date of Joining',
-          value: '—  —  —  —  —  —  —  —',
-        ),
-      ],
+          // static rows can stay const
+          InfoRow(
+            icon: Icons.business,
+            label: 'OrgCode',
+            // value: _orgCode.isEmpty ? '—' : _orgCode,
+            value: "YOOOOO",
+          ),
+        ],
+      ),
     );
   }
 }
