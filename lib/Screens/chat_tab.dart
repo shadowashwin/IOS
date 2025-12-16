@@ -41,6 +41,7 @@ class _ChatTabState extends State<ChatTab> {
                 fit: BoxFit.cover,
                 height: 70,
               ),
+              Container(height: 20),
               Text(
                 "TAP TO CHAT",
                 style: TextStyle(

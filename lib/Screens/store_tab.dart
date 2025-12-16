@@ -42,6 +42,7 @@ class _StoreTabState extends State<StoreTab> with WidgetsBindingObserver {
     }
 
     final decoded = jsonDecode(res.body);
+    print('Decoded data: ${decoded[0]['images']}');
     if (decoded is! List) {
       throw Exception('Unexpected response: expected a List.');
     }
@@ -56,6 +57,7 @@ class _StoreTabState extends State<StoreTab> with WidgetsBindingObserver {
   Future<void> _refreshPurchased() async {
     setState(() {
       _purchasedFuture = fetch();
+      // print(_purchasedFuture);
     });
     // tiny delay so RefreshIndicator animates smoothly
     await Future<void>.delayed(const Duration(milliseconds: 120));
@@ -66,7 +68,7 @@ class _StoreTabState extends State<StoreTab> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _purchasedFuture = fetch(); // initial load
+    _purchasedFuture = fetch();
   }
 
   @override
@@ -203,25 +205,32 @@ class StoreListItem extends StatelessWidget {
             width: 96,
             child: AspectRatio(
               aspectRatio: 16 / 12,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCDE8CC),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFF9BC69E)),
-                ),
-                padding: const EdgeInsets.all(8),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                    (product.bullets.isNotEmpty
-                            ? product.bullets.first
-                            : product.title)
-                        .toUpperCase(),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 10,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  product.images.first,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCDE8CC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF9BC69E)),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        (product.bullets.isNotEmpty
+                                ? product.bullets.first
+                                : product.title)
+                            .toUpperCase(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 10,
+                        ),
+                      ),
                     ),
                   ),
                 ),
