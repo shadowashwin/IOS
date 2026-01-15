@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../Components/DeleteConfirmationDialog.dart';
 import '../Components/app_number_badge.dart';
 import '../SecureStorage/SecureStorageService.dart';
 
@@ -166,6 +167,16 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
     });
   }
 
+  void showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // user must choose
+      builder: (context) {
+        return DeleteConfirmationDialog();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // return SectionContainer(
@@ -234,6 +245,28 @@ class _SectionBasicInformationState extends State<SectionBasicInformation> {
             label: 'OrgCode',
             value: _orgCode.isEmpty ? '—' : _orgCode,
             // value: "YOOOOO",
+          ),
+          InkWell(
+            onTap: () {
+              showDeleteDialog(context);
+            },
+            child: Container(
+              height: mq.height * 0.05,
+              width: mq.width * 0.7,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Center(
+                child: Text(
+                  "Delete Account",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

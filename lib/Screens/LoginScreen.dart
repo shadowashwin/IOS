@@ -571,6 +571,8 @@ class _LoginscreenState extends State<Loginscreen> {
 
   String apiBaseUrl = "https://backend.obgynprep.store";
 
+  // String apiBaseUrl = "https://8c87f6c5791d.ngrok-free.app";
+
   int _resendCooldown = 0;
   Timer? _resendTimer;
 
@@ -681,6 +683,7 @@ class _LoginscreenState extends State<Loginscreen> {
           );
         }
       } else {
+        print(resp.body);
         _showBottomMessage(
           icon: Icons.error_outline,
           color: Colors.red,

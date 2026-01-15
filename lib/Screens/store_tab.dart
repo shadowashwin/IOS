@@ -18,8 +18,8 @@ class StoreTab extends StatefulWidget {
 
 class _StoreTabState extends State<StoreTab> with WidgetsBindingObserver {
   final TextEditingController _search = TextEditingController();
-  final String _base = "https://backend.obgynprep.store";
-
+  // final String _base = "https://backend.obgynprep.store";
+  String _base = "https://8c87f6c5791d.ngrok-free.app/";
   late Future<List<Product>> _purchasedFuture;
 
   // ---------- API ----------
@@ -137,7 +137,7 @@ class _StoreTabState extends State<StoreTab> with WidgetsBindingObserver {
               if (snap.hasError) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(child: Text('Error: ${snap.error}')),
+                  child: Center(child: Text('Store is empty. Buy courses')),
                 );
               }
 
