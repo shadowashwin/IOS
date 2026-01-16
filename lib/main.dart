@@ -19,7 +19,7 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   final _noScreenshot = NoScreenshot.instance;
-  bool screenshot_disabled = true;
+  bool screenshot_disabled = false;
 
   Future<bool> _hasUserData() async {
     final storage = SecureStorageService();
