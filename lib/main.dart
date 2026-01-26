@@ -24,7 +24,18 @@ class _AppState extends State<App> {
   Future<bool> _hasUserData() async {
     final storage = SecureStorageService();
     final user = await storage.getUserData();
-    return user != null;
+
+    // Check if user exists and has a valid token
+    if (user == null) return false;
+
+    final token = user['token'];
+    if (token == null || token.isEmpty) {
+      // Token is missing or empty, clear the stale data
+      await storage.clearUserData();
+      return false;
+    }
+
+    return true;
   }
 
   Future<void> _disableScreenshots() async {
