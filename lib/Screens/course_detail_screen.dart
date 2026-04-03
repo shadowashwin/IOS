@@ -208,10 +208,21 @@ class _GalleryRowState extends State<_GalleryRow> {
               aspectRatio: 16 / 12,
               child: InkWell(
                 onTap: () {
+                  // if (widget.screen == "store") {
+                  //   ScaffoldMessenger.of(
+                  //     context,
+                  //   ).showSnackBar(SnackBar(content: Text("Buy to view pdf")));
+                  // } else {
+                  //   Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (_) => PdfViewerPage(courseId: widget.id),
+                  //     ),
+                  //   );
+                  // }
                   if (widget.screen != "store") {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text("Buy to view pdf")));
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(content: Text("Buy to view pdf")));
                   } else {
                     Navigator.push(
                       context,

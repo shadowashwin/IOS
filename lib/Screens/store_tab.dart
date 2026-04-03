@@ -194,7 +194,7 @@ class StoreListItem extends StatelessWidget {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => CourseDetailPage(product: product, screen: "store"),
+          builder: (_) => CourseDetailPage(product: product, screen: "my_courses"),
         ),
       ),
       child: Row(
