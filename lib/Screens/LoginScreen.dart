@@ -171,16 +171,16 @@ class _LoginscreenState extends State<Loginscreen> {
     final name = _nameController.text.trim();
     final mobile = _mobileController.text.trim();
 
-    if ((!signup_login && mobile.isEmpty) ||
-        (signup_login && (name.isEmpty || mobile.isEmpty))) {
-      _showBottomMessage(
-        icon: Icons.error_outline,
-        color: Colors.red,
-        text: 'Please enter all details',
-      );
-      setState(() => _isLoadingRegister = false);
-      return;
-    }
+    // if ((!signup_login && mobile.isEmpty) ||
+    //     (signup_login && (name.isEmpty || mobile.isEmpty))) {
+    //   _showBottomMessage(
+    //     icon: Icons.error_outline,
+    //     color: Colors.red,
+    //     text: 'Please enter all details',
+    //   );
+    //   setState(() => _isLoadingRegister = false);
+    //   return;
+    // }
 
     try {
       // final uri = signup_login
@@ -207,6 +207,7 @@ class _LoginscreenState extends State<Loginscreen> {
         setState(() => _stage = _Stage.otp);
         _startResendCooldown();
       } else {
+        print(resp.body);
         _showBottomMessage(
           icon: Icons.error_outline,
           color: Colors.red,
@@ -347,24 +348,23 @@ class _LoginscreenState extends State<Loginscreen> {
       // break;
 
       case _Stage.register:
-      content = Column(
-        children: [
-          buildTextField(
-            _mobileController,
-            'Mobile Number',
-            Icons.phone,
-            keyboard: TextInputType.phone,
-          ),
-          const SizedBox(height: 24),
-          buildButton(
-            _isLoadingRegister ? "Please wait..." : "Send OTP",
-            _isLoadingRegister ? null : _onRegisterSubmit,
-            loading: _isLoadingRegister,
-          ),
-        ],
-      );
-      break;
-
+        content = Column(
+          children: [
+            buildTextField(
+              _mobileController,
+              'Mobile Number',
+              Icons.phone,
+              keyboard: TextInputType.phone,
+            ),
+            const SizedBox(height: 24),
+            buildButton(
+              _isLoadingRegister ? "Please wait..." : "Send OTP",
+              _isLoadingRegister ? null : _onRegisterSubmit,
+              loading: _isLoadingRegister,
+            ),
+          ],
+        );
+        break;
 
       case _Stage.otp:
         content = Column(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../Components/Chips.dart';
 import '../Components/pdfviewer.dart';
-import '../Components/sticky_buy_bar.dart';
 import '../Modal/Product.dart';
 
 class CourseDetailPage extends StatelessWidget {
@@ -33,9 +32,9 @@ class CourseDetailPage extends StatelessWidget {
           ),
         ),
         body: OverviewTab(product: product, screen: screen),
-        bottomNavigationBar: screen == "store"
-            ? Container(height: 0)
-            : StickyBuyBar(product: product),
+        // bottomNavigationBar: screen == "store"
+        //     ? Container(height: 0)
+        //     : StickyBuyBar(product: product),
       ),
     );
   }
@@ -220,17 +219,24 @@ class _GalleryRowState extends State<_GalleryRow> {
                   //     ),
                   //   );
                   // }
-                  if (widget.screen != "store") {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text("Buy to view pdf")));
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PdfViewerPage(courseId: widget.id),
-                      ),
-                    );
-                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PdfViewerPage(courseId: widget.id),
+                    ),
+                  );
+                  // if (widget.screen != "store") {
+                  //   ScaffoldMessenger.of(context).showSnackBar(
+                  //     const SnackBar(content: Text("Buy to view pdf")),
+                  //   );
+                  // } else {
+                  //   Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (_) => PdfViewerPage(courseId: widget.id),
+                  //     ),
+                  //   );
+                  // }
                 },
                 child: Container(
                   decoration: BoxDecoration(
