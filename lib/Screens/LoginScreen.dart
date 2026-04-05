@@ -350,6 +350,8 @@ class _LoginscreenState extends State<Loginscreen> {
       case _Stage.register:
         content = Column(
           children: [
+            buildTextField(_orgController, 'Login', Icons.business),
+            const SizedBox(height: 24),
             buildTextField(
               _mobileController,
               'Mobile Number',
@@ -370,6 +372,8 @@ class _LoginscreenState extends State<Loginscreen> {
         content = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            buildTextField(_orgController, 'OTP', Icons.business),
+            const SizedBox(height: 24),
             Pinput(
               length: 6,
               controller: _otpController,
