@@ -43,8 +43,8 @@ class DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> {
   }
 
   Future<void> deleteAccountAndLogout(BuildContext context) async {
-    const String url = 'https://backend.obgynprep.store/api/users/delete';
-    // String url = "https://8c87f6c5791d.ngrok-free.app/api/users/delete";
+    // const String url = 'https://backend.obgynprep.store/api/users/delete';
+    const String url = "https://3ae4-2001-4490-4465-3f19-2dce-8b0e-c6-29ae.ngrok-free.app/api/users/delete";
 
     // final storage = SecureStorageService();
 
