@@ -31,9 +31,9 @@ class _LoginscreenState extends State<Loginscreen> {
   final _otpController = TextEditingController();
   final _otpFocusNode = FocusNode();
 
-  // String apiBaseUrl = "https://backend.obgynprep.store";
+  String apiBaseUrl = "https://backend.obgynprep.store";
 
-  String apiBaseUrl = "https://3ae4-2001-4490-4465-3f19-2dce-8b0e-c6-29ae.ngrok-free.app/";
+  // String apiBaseUrl = "https://3ae4-2001-4490-4465-3f19-2dce-8b0e-c6-29ae.ngrok-free.app/";
 
   int _resendCooldown = 0;
   Timer? _resendTimer;
@@ -350,8 +350,8 @@ class _LoginscreenState extends State<Loginscreen> {
       case _Stage.register:
         content = Column(
           children: [
-            buildTextField(_orgController, 'Login', Icons.business),
-            const SizedBox(height: 24),
+            // buildTextField(_orgController, 'Login', Icons.business),
+            // const SizedBox(height: 24),
             buildTextField(
               _mobileController,
               'Mobile Number',
@@ -372,8 +372,8 @@ class _LoginscreenState extends State<Loginscreen> {
         content = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            buildTextField(_orgController, 'OTP', Icons.business),
-            const SizedBox(height: 24),
+            // buildTextField(_orgController, 'OTP', Icons.business),
+            // const SizedBox(height: 24),
             Pinput(
               length: 6,
               controller: _otpController,
